@@ -18,6 +18,7 @@ function saveKey(c: AIKeyConfig) { localStorage.setItem(LS_KEY, JSON.stringify(c
 function loadKey(): AIKeyConfig | null { try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 function clearKey() { localStorage.removeItem(LS_KEY); }
 
+type AIProvider = "groq" | "openai" | "deepseek" | "gemini";
 const AI_PROVIDERS: Record<AIProvider, { label: string; placeholder: string; docsUrl: string }> = {
   groq: { label: "Groq — Llama 3 (Free)", placeholder: "gsk_...", docsUrl: "https://console.groq.com/keys" },
   openai: { label: "OpenAI — GPT-4o-mini", placeholder: "sk-...", docsUrl: "https://platform.openai.com/api-keys" },
