@@ -1,0 +1,18 @@
+﻿"use client";
+import { Globe, Radio, ShieldOff } from "lucide-react";
+import type { WsIncidentOpen } from "@/types";
+function InfoRow({label,value,mono=false}:{label:string;value:React.ReactNode;mono?:boolean}){return <div className="flex items-center justify-between gap-2 py-1.5 border-b border-slate-800/60 last:border-0"><span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">{label}</span><span className={`text-xs text-slate-300 truncate text-right ${mono?"font-mono":""}`}>{value}</span></div>;}
+function Flag({active,label,color}:{active:boolean;label:string;color:string}){return <div className={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${active?`${color} opacity-100`:"bg-slate-800/50 border-slate-700/50 text-slate-600 opacity-70"}`}><span className={`w-1.5 h-1.5 rounded-full ${active?"bg-current":"bg-slate-600"}`}/>{label}</div>;}
+interface ThreatIntelPanelProps { incident:WsIncidentOpen|null; isRunning:boolean; }
+export default function ThreatIntelPanel({incident,isRunning}:ThreatIntelPanelProps){
+  return(
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-700/60 shrink-0"><Globe className="w-4 h-4 text-violet-400"/><span className="text-xs font-semibold text-slate-300 uppercase tracking-widest">Threat Intel</span>{isRunning&&incident&&<span className="ml-auto flex items-center gap-1 text-[10px] text-violet-400"><Radio className="w-3 h-3 animate-pulse"/>Enriching</span>}</div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">{!incident?<div className="flex flex-col items-center justify-center h-full gap-2 text-slate-600"><ShieldOff className="w-8 h-8 opacity-30"/><p className="text-xs">No active threat detected.</p></div>:<>
+        <div className="flex items-center justify-center py-2"><div className="relative flex items-center justify-center"><svg className="w-24 h-24 -rotate-90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#1e293b" strokeWidth="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke={incident.risk_score>=90?"#f43f5e":incident.risk_score>=70?"#f59e0b":"#10b981"} strokeWidth="3" strokeDasharray={`${incident.risk_score} 100`} strokeLinecap="round"/></svg><div className="absolute text-center"><p className={`text-xl font-black font-mono leading-none ${incident.risk_score>=90?"text-rose-400":incident.risk_score>=70?"text-amber-400":"text-emerald-400"}`}>{incident.risk_score}</p><p className="text-[9px] text-slate-500">risk</p></div></div></div>
+        <div className="space-y-0 rounded-xl bg-slate-800/30 border border-slate-700/50 px-3 py-1"><InfoRow label="IP" value={incident.source_ip} mono/><InfoRow label="Country" value={incident.country}/><InfoRow label="City" value={incident.city}/><InfoRow label="ASN" value={incident.asn} mono/><InfoRow label="MITRE" value={<span className="text-[10px] font-mono text-cyan-300 bg-cyan-900/30 border border-cyan-800/40 px-1.5 py-px rounded">{incident.mitre_technique}</span>}/></div>
+        <div className="space-y-1.5"><p className="text-[10px] text-slate-500 uppercase tracking-wider">Threat Flags</p><div className="flex flex-wrap gap-1.5"><Flag active={incident.is_tor} label="TOR Exit" color="bg-purple-500/15 border-purple-500/30 text-purple-300"/><Flag active={incident.is_vpn} label="VPN" color="bg-amber-500/15 border-amber-500/30 text-amber-300"/><Flag active={incident.is_proxy} label="Proxy" color="bg-orange-500/15 border-orange-500/30 text-orange-300"/><Flag active={incident.severity==="CRITICAL"} label="Critical" color="bg-rose-500/15 border-rose-500/30 text-rose-300"/></div></div>
+      </>}</div>
+    </div>
+  );
+}

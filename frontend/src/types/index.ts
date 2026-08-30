@@ -1,0 +1,17 @@
+﻿export type AttackVector="SQL_INJECTION"|"DATA_EXFILTRATION"|"RANSOMWARE";
+export type Severity="LOW"|"MEDIUM"|"HIGH"|"CRITICAL";
+export type IncidentStatus="OPEN"|"INVESTIGATING"|"MITIGATED"|"RESOLVED"|"FALSE_POSITIVE";
+export type AIProvider="groq"|"openai"|"deepseek";
+export type DefenseAction="IP_BLOCKED"|"SESSION_KILLED"|"PROCESS_TERMINATED";
+export type WsEventType="INCIDENT_OPEN"|"LOG_EVENT"|"DEFENSE_ACTION"|"SIMULATION_COMPLETE"|"ERROR";
+export interface WsIncidentOpen{type:"INCIDENT_OPEN";incident_id:string;attack_type:AttackVector;mitre_technique:string;mitre_tactic:string;severity:Severity;source_ip:string;country:string;city:string;asn:string;is_tor:boolean;is_vpn:boolean;is_proxy:boolean;risk_score:number;timestamp:string;}
+export interface WsLogEvent{type:"LOG_EVENT";incident_id:string;sequence:number;source_ip:string;data:Record<string,unknown>;timestamp:string;}
+export interface WsDefenseAction{type:"DEFENSE_ACTION";incident_id:string;action:DefenseAction;detail:string;automated:boolean;timestamp:string;}
+export interface WsSimulationComplete{type:"SIMULATION_COMPLETE";incident_id:string;timestamp:string;}
+export interface WsError{type:"ERROR";message:string;}
+export type WsEvent=WsIncidentOpen|WsLogEvent|WsDefenseAction|WsSimulationComplete|WsError;
+export interface Incident{id:string;attack_type:AttackVector;mitre_technique:string;mitre_tactic:string;severity:Severity;source_ip:string;country:string|null;city:string|null;asn:string|null;is_tor:boolean;is_vpn:boolean;is_proxy:boolean;risk_score:number|null;status:IncidentStatus;created_at:string;updated_at:string;}
+export interface AIAnalysis{summary:string;mitre_technique:string;mitre_tactic:string;action_taken:DefenseAction;action_detail:string;risk_score:number;}
+export interface BlockedIP{id:string;ip_address:string;reason:string;blocked_at:string;is_active:boolean;}
+export interface AIKeyConfig{provider:AIProvider;key:string;}
+export interface SimulationState{isRunning:boolean;currentIncidentId:string|null;attackType:AttackVector|null;events:WsEvent[];analysis:AIAnalysis|null;}
