@@ -8,13 +8,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Activity, AlertTriangle, ChevronDown, ChevronRight,
-  Circle, Clock, Database, ExternalLink, Eye, EyeOff,
+  Activity, AlertTriangle, ChevronDown,
+  ExternalLink, Eye, EyeOff,
   FileText, Filter, Key, Layers, Lock, RefreshCw,
-  Server, Settings, Shield, Terminal, Trash2, X, Zap
+  Settings, Shield, Terminal, Trash2, X, Zap
 } from "lucide-react";
 import type {
-  AIAnalysis, AIKeyConfig, AIProvider, AttackVector,
+  AIAnalysis, AIKeyConfig, AttackVector,
   WsEvent, WsIncidentOpen, WsLogEvent, WsDefenseAction
 } from "@/types";
 
