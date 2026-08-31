@@ -53,12 +53,76 @@ const SEV: Record<string, { dot: string; badge: string; label: string }> = {
   LOW: { dot: "bg-[#3fb950]", badge: "text-[#3fb950] bg-[#3fb950]/10 border-[#3fb950]/20", label: "LOW" },
 };
 
-// ─── Mock system metrics (static for demo) ───────────────────────────────────
+// ─── Synthetic init logs for empty state ─────────────────────────────────────
+const INIT_LOGS: { ts: string; level: string; type: string; source: string; detail: string; levelColor: string }[] = [
+  { ts: "--:--:--", level: "SYS", type: "BOOT", source: "soc-core", detail: "Detection engine initialized — MITRE ATT&CK v15 loaded", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "ngfw-01", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "waf-proxy", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "edr-agent", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "INFO", type: "STANDBY", source: "siem-core", detail: "Event stream open — inject a vector to begin simulation", levelColor: "text-[#3fb950]" },
+];
+
+// ─── Sparkline component ──────────────────────────────────────────────────────
+function Sparkline({ width = 56, height = 18 }: { width?: number; height?: number }) {
+  const [points, setPoints] = useState<number[]>(() =>
+    Array.from({ length: 20 }, () => 0.3 + Math.random() * 0.5)
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPoints(prev => {
+        const next = [...prev.slice(1), 0.3 + Math.random() * 0.65];
+        return next;
+      });
+    }, 800);
+    return () => clearInterval(id);
+  }, []);
+
+  const pad = 1;
+  const w = width - pad * 2;
+  const h = height - pad * 2;
+  const step = w / (points.length - 1);
+
+  const coords = points.map((v, i) => ({
+    x: pad + i * step,
+    y: pad + (1 - v) * h,
+  }));
+
+  const linePath = coords
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
+
+  const areaPath =
+    linePath +
+    ` L ${coords[coords.length - 1].x.toFixed(1)} ${(pad + h).toFixed(1)}` +
+    ` L ${coords[0].x.toFixed(1)} ${(pad + h).toFixed(1)} Z`;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#238636" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#238636" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#spark-fill)" />
+      <path d={linePath} fill="none" stroke="#3fb950" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ─── System metrics strip ─────────────────────────────────────────────────────
 const SYSTEM_METRICS = [
-  { label: "Events/sec", value: "2,847", delta: "+12%", ok: true },
-  { label: "Avg Latency", value: "18ms", delta: "-3ms", ok: true },
-  { label: "Active Rules", value: "1,204", delta: "", ok: true },
-  { label: "Queue Depth", value: "0", delta: "", ok: true },
+  { label: "Events/sec", value: "2,847", delta: "+12%", ok: true, sparkline: true },
+  { label: "Avg Latency", value: "18ms", delta: "-3ms", ok: true, sparkline: false },
+  { label: "Active Rules", value: "1,204", delta: "", ok: true, sparkline: false },
+  { label: "Queue Depth", value: "0", delta: "", ok: true, sparkline: false },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -147,13 +211,19 @@ export default function Page() {
 
         <div className="flex-1" />
 
-        {/* System metrics strip */}
-        <div className="hidden lg:flex items-center gap-4 mr-4 pr-4 border-r border-[#30363d]">
+        {/* ── FIX 3: System metrics strip with sparkline on Events/sec ── */}
+        <div className="hidden lg:flex items-center gap-5 mr-4 pr-4 border-r border-[#30363d]">
           {SYSTEM_METRICS.map(m => (
-            <div key={m.label} className="flex items-center gap-1.5">
-              <span className="text-[10px] text-[#8b949e]">{m.label}</span>
-              <span className="text-[11px] font-mono font-medium text-[#e6edf3]">{m.value}</span>
-              {m.delta && <span className={`text-[9px] font-mono ${m.ok ? "text-[#3fb950]" : "text-[#da3633]"}`}>{m.delta}</span>}
+            <div key={m.label} className="flex items-center gap-2">
+              {/* Sparkline sits to the left of the label+value group for Events/sec */}
+              {m.sparkline && <Sparkline width={56} height={18} />}
+              <div className="flex flex-col items-end leading-none gap-0.5">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[11px] font-mono font-medium text-[#e6edf3]">{m.value}</span>
+                  {m.delta && <span className={`text-[9px] font-mono ${m.ok ? "text-[#3fb950]" : "text-[#da3633]"}`}>{m.delta}</span>}
+                </div>
+                <span className="text-[9px] text-[#8b949e]">{m.label}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -179,32 +249,47 @@ export default function Page() {
 
         {/* ── Col 1: Attack injector ── */}
         <aside className="border-r border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
-          {/* Section header */}
           <SectionHeader icon={<Zap className="w-3.5 h-3.5" />} label="Attack Simulation" count={incidentCount} />
 
           <div className="flex-1 overflow-y-auto">
             {/* Injector */}
             <div className="p-3 border-b border-[#30363d]">
               <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Inject Vector</p>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {VECTORS.map(v => {
                   const active = activeVector === v.id && isRunning;
                   const sev = SEV[v.severity];
                   return (
-                    <button key={v.id} onClick={() => !isRunning && launch(v.id)} disabled={isRunning}
-                      className={`w-full text-left rounded px-3 py-2.5 border transition-all text-xs ${active ? "border-[#58a6ff]/40 bg-[#58a6ff]/8" : isRunning ? "border-[#30363d] opacity-50 cursor-not-allowed" : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${sev.badge}`}>{sev.label}</span>
-                        <span className="text-[10px] font-mono text-[#58a6ff]">{v.technique}</span>
+                    // ── FIX 1: Vertical layout prevents badge/title collision ──
+                    <button
+                      key={v.id}
+                      onClick={() => !isRunning && launch(v.id)}
+                      disabled={isRunning}
+                      className={`w-full text-left rounded px-3 py-2.5 border transition-all ${active
+                          ? "border-[#58a6ff]/40 bg-[#58a6ff]/8"
+                          : isRunning
+                            ? "border-[#30363d] opacity-50 cursor-not-allowed"
+                            : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"
+                        }`}
+                    >
+                      {/* Row 1: severity badge + technique — both shrink-0, never overlap */}
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${sev.badge}`}>
+                          {sev.label}
+                        </span>
+                        <span className="text-[10px] font-mono text-[#58a6ff] shrink-0">{v.technique}</span>
                       </div>
-                      <p className="text-[11px] text-[#c9d1d9] font-medium leading-tight">{v.label}</p>
+                      {/* Row 2: label on its own line — full width, no collision risk */}
+                      <p className="text-[11px] text-[#c9d1d9] font-medium leading-snug">{v.label}</p>
+                      {/* Row 3: tactic */}
                       <p className="text-[10px] text-[#8b949e] mt-0.5">{v.tactic}</p>
+                      {/* Row 4: progress bar if active */}
                       {active && (
-                        <div className="mt-1.5 flex items-center gap-1.5">
-                          <div className="h-1 flex-1 bg-[#30363d] rounded-full overflow-hidden">
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <div className="h-0.5 flex-1 bg-[#30363d] rounded-full overflow-hidden">
                             <div className="h-full bg-[#58a6ff] rounded-full animate-pulse" style={{ width: "60%" }} />
                           </div>
-                          <span className="text-[9px] text-[#58a6ff] font-mono">running</span>
+                          <span className="text-[9px] text-[#58a6ff] font-mono shrink-0">RUNNING</span>
                         </div>
                       )}
                     </button>
@@ -235,7 +320,7 @@ export default function Page() {
               }
             </div>
 
-            {/* System info */}
+            {/* Detection nodes */}
             <div className="p-3 border-t border-[#30363d] mt-auto">
               <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Detection Nodes</p>
               {[["ngfw-01", "online"], ["waf-proxy", "online"], ["edr-agent", "online"], ["siem-core", "online"]].map(([node, status]) => (
@@ -256,7 +341,7 @@ export default function Page() {
             <Terminal className="w-3.5 h-3.5 text-[#8b949e]" />
             <span className="text-xs font-medium text-[#8b949e]">Event Stream</span>
             <span className="text-[10px] font-mono text-[#484f58]">—</span>
-            <span className="text-[10px] font-mono text-[#8b949e]">{events.length} events</span>
+            <span className="text-[10px] font-mono text-[#8b949e]">{events.length > 0 ? events.length : INIT_LOGS.length} events</span>
             {isRunning && (
               <div className="flex items-center gap-1.5 ml-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950] animate-pulse" />
@@ -269,20 +354,40 @@ export default function Page() {
             </button>
           </div>
 
-          {/* Column headers */}
+          {/* ── FIX 2: Column headers always visible ── */}
           <div className="flex items-center gap-0 h-7 border-b border-[#30363d] bg-[#161b22] px-4 shrink-0">
-            {[["TIME", "w-16"], ["LEVEL", "w-14"], ["TYPE", "w-24"], ["SOURCE", "w-32"], ["DETAIL", "flex-1"]].map(([l, w]) => (
+            {[["TIME", "w-20"], ["LEVEL", "w-14"], ["TYPE", "w-28"], ["SOURCE", "w-32"], ["DETAIL", "flex-1"]].map(([l, w]) => (
               <div key={l} className={`${w} text-[9px] font-semibold text-[#484f58] uppercase tracking-wider pr-4`}>{l}</div>
             ))}
           </div>
 
-          {/* Events */}
+          {/* Events — init logs shown when no live events exist */}
           <div ref={feedRef} className="flex-1 overflow-y-auto font-mono text-[11px]">
             {events.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-[#484f58]">
-                <Terminal className="w-8 h-8 opacity-30" />
-                <p className="text-xs">Waiting for simulation input. Select a vector to inject.</p>
-              </div>
+              <>
+                {INIT_LOGS.map((log, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-0 px-4 py-0.5 hover:bg-[#161b22] transition-colors border-b border-[#21262d]/40"
+                  >
+                    <span className="w-20 text-[#484f58] shrink-0">{log.ts}</span>
+                    <span className={`w-14 shrink-0 ${log.levelColor}`}>{log.level}</span>
+                    <span className="w-28 text-[#484f58] shrink-0 truncate">{log.type}</span>
+                    <span className="w-32 font-mono text-[#8b949e] shrink-0 truncate">{log.source}</span>
+                    <span className="flex-1 text-[#484f58] truncate">{log.detail}</span>
+                  </div>
+                ))}
+                {/* Blinking cursor row to signal the stream is live and waiting */}
+                <div className="flex items-center gap-0 px-4 py-1">
+                  <span className="w-20 text-[#484f58] shrink-0">--:--:--</span>
+                  <span className="w-14 shrink-0" />
+                  <span className="w-28 shrink-0" />
+                  <span className="w-32 shrink-0" />
+                  <span className="flex-1 flex items-center gap-1.5 text-[#484f58]">
+                    <span className="inline-block w-1.5 h-3 bg-[#8b949e] opacity-60 animate-pulse" />
+                  </span>
+                </div>
+              </>
             ) : (
               events.map((ev, i) => <EventRow key={i} ev={ev} />)
             )}
@@ -309,7 +414,6 @@ export default function Page() {
               </div>
             ) : (
               <div className="px-4 py-3 space-y-3">
-                {/* Risk score bar */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">Risk Score</span>
@@ -320,7 +424,6 @@ export default function Page() {
                   </div>
                 </div>
 
-                {/* Attributes */}
                 <div className="space-y-1.5 text-[11px]">
                   {[
                     ["Source IP", incident.source_ip, true],
@@ -337,7 +440,6 @@ export default function Page() {
                   ))}
                 </div>
 
-                {/* Flags */}
                 <div className="flex gap-1.5 flex-wrap">
                   {incident.is_tor && <Flag label="TOR EXIT NODE" color="red" />}
                   {incident.is_vpn && <Flag label="VPN" color="yellow" />}
@@ -383,7 +485,6 @@ export default function Page() {
               )}
               {analysis && !isAnalyzing && (
                 <div className="space-y-3">
-                  {/* Confidence + technique */}
                   <div className="flex items-center justify-between p-2 rounded bg-[#161b22] border border-[#30363d]">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-bold text-[#58a6ff] border border-[#58a6ff]/30 bg-[#58a6ff]/8 px-1.5 py-0.5 rounded">{analysis.mitre_technique}</span>
@@ -395,13 +496,11 @@ export default function Page() {
                     </div>
                   </div>
 
-                  {/* Analyst summary */}
                   <div>
                     <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Triage Summary</p>
                     <p className="text-[11px] text-[#c9d1d9] leading-relaxed bg-[#161b22] border border-[#30363d] rounded px-3 py-2">{analysis.summary}</p>
                   </div>
 
-                  {/* Response action */}
                   <div>
                     <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Automated Response</p>
                     <div className="px-3 py-2 rounded border border-[#238636]/30 bg-[#238636]/8">
@@ -468,9 +567,9 @@ function EventRow({ ev }: { ev: WsEvent }) {
     const e = ev as WsIncidentOpen;
     return (
       <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] hover:bg-[#161b22] transition-colors">
-        <span className="w-16 text-[#8b949e] shrink-0">{ts}</span>
+        <span className="w-20 text-[#8b949e] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#da3633]/30 text-[#da3633] bg-[#da3633]/8">ALERT</span></span>
-        <span className="w-24 text-[#8b949e] shrink-0">INCIDENT_OPEN</span>
+        <span className="w-28 text-[#8b949e] shrink-0">INCIDENT_OPEN</span>
         <span className="w-32 font-mono text-[#58a6ff] shrink-0 truncate">{e.source_ip}</span>
         <span className="flex-1 text-[#c9d1d9] truncate">{e.attack_type.replace(/_/g, " ")} · {e.country} · risk <span className={e.risk_score >= 80 ? "text-[#da3633]" : "text-[#d29922]"}>{e.risk_score}/100</span>{e.is_tor ? " · TOR" : ""}</span>
       </div>
@@ -481,9 +580,9 @@ function EventRow({ ev }: { ev: WsEvent }) {
     const eventName = String((e.data as Record<string, unknown>).event ?? "EVENT");
     return (
       <div className="flex items-center gap-0 px-4 py-0.5 hover:bg-[#161b22] transition-colors">
-        <span className="w-16 text-[#484f58] shrink-0">{ts}</span>
+        <span className="w-20 text-[#484f58] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-mono text-[#3fb950]">INFO</span></span>
-        <span className="w-24 text-[#484f58] font-mono shrink-0 truncate">{eventName}</span>
+        <span className="w-28 text-[#484f58] font-mono shrink-0 truncate">{eventName}</span>
         <span className="w-32 font-mono text-[#8b949e] shrink-0 truncate">{e.source_ip}</span>
         <span className="flex-1 text-[#484f58] font-mono truncate">{JSON.stringify(e.data)}</span>
       </div>
@@ -493,9 +592,9 @@ function EventRow({ ev }: { ev: WsEvent }) {
     const e = ev as WsDefenseAction;
     return (
       <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] bg-[#238636]/5 hover:bg-[#238636]/10 transition-colors">
-        <span className="w-16 text-[#8b949e] shrink-0">{ts}</span>
+        <span className="w-20 text-[#8b949e] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#238636]/40 text-[#3fb950] bg-[#238636]/15">ACTION</span></span>
-        <span className="w-24 text-[#3fb950] font-mono shrink-0 truncate">{e.action}</span>
+        <span className="w-28 text-[#3fb950] font-mono shrink-0 truncate">{e.action}</span>
         <span className="w-32 font-mono text-[#8b949e] shrink-0">automated</span>
         <span className="flex-1 text-[#8b949e] truncate">{e.detail}</span>
       </div>
@@ -504,9 +603,9 @@ function EventRow({ ev }: { ev: WsEvent }) {
   if (ev.type === "SIMULATION_COMPLETE") {
     return (
       <div className="flex items-center gap-0 px-4 py-1 border-b border-[#30363d]">
-        <span className="w-16 text-[#484f58] shrink-0">{ts}</span>
+        <span className="w-20 text-[#484f58] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-mono text-[#484f58]">SYS</span></span>
-        <span className="w-24 text-[#484f58] font-mono shrink-0">SIM_DONE</span>
+        <span className="w-28 text-[#484f58] font-mono shrink-0">SIM_DONE</span>
         <span className="w-32 shrink-0" />
         <span className="flex-1 text-[#484f58] italic">Simulation complete — triage pipeline running</span>
       </div>
@@ -529,7 +628,6 @@ function KeyModal({ onClose, onSave }: { onClose: () => void; onSave: (c: AIKeyC
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-md mx-4 rounded-md border border-[#30363d] bg-[#161b22] shadow-2xl shadow-black/50">
-        {/* Header */}
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#30363d]">
           <Settings className="w-4 h-4 text-[#8b949e]" />
           <div className="flex-1">
@@ -540,13 +638,11 @@ function KeyModal({ onClose, onSave }: { onClose: () => void; onSave: (c: AIKeyC
         </div>
 
         <div className="px-5 py-4 space-y-4">
-          {/* Notice */}
           <div className="flex gap-2.5 p-3 rounded border border-[#d29922]/20 bg-[#d29922]/5">
             <AlertTriangle className="w-3.5 h-3.5 text-[#d29922] shrink-0 mt-0.5" />
             <p className="text-[11px] text-[#d29922]/80 leading-relaxed">Key is forwarded via request header to <span className="font-semibold text-[#d29922]">{prov.label}</span>. Zero server-side storage.</p>
           </div>
 
-          {/* Provider select */}
           <div className="space-y-1.5">
             <label className="block text-[10px] text-[#8b949e] uppercase tracking-wider font-medium">Provider / Model</label>
             <div className="relative">
@@ -561,7 +657,6 @@ function KeyModal({ onClose, onSave }: { onClose: () => void; onSave: (c: AIKeyC
             </a>
           </div>
 
-          {/* Key input */}
           <div className="space-y-1.5">
             <label className="block text-[10px] text-[#8b949e] uppercase tracking-wider font-medium">API Key</label>
             <div className="relative">
@@ -576,7 +671,6 @@ function KeyModal({ onClose, onSave }: { onClose: () => void; onSave: (c: AIKeyC
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center gap-2 px-5 py-3 border-t border-[#30363d]">
           <button onClick={() => { clearKey(); setApiKey(""); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#30363d] text-[11px] text-[#8b949e] hover:text-[#da3633] hover:border-[#da3633]/30 transition-colors">
             <Trash2 className="w-3 h-3" />Remove
