@@ -1,11 +1,11 @@
-"""
-SOC AI Copilot — FastAPI Backend
+﻿"""
+SOC AI Copilot ΓÇö FastAPI Backend
 =================================
 Provides:
   - REST endpoints for incidents, defense logs, and blocked IPs
   - WebSocket endpoint (/ws/telemetry) that streams live attack simulation events
   - Attack simulation engine for 3 MITRE ATT&CK vectors
-  - AI analysis proxy (BYOK — API key sent via X-AI-Key / X-AI-Provider headers)
+  - AI analysis proxy (BYOK ΓÇö API key sent via X-AI-Key / X-AI-Provider headers)
   - Supabase persistence layer
 
 Deploy to Render (Free Tier):
@@ -49,7 +49,7 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Supabase client (server-side — uses service_role key)
+# Supabase client (server-side ΓÇö uses service_role key)
 # ---------------------------------------------------------------------------
 
 SUPABASE_URL: str = os.environ["SUPABASE_URL"]
@@ -142,7 +142,7 @@ ATTACK_PROFILES: dict[AttackVector, dict] = {
 # ---------------------------------------------------------------------------
 
 DEFENSE_ACTIONS: dict[AttackVector, dict] = {
-    "SQL_INJECTION":    {"action": "IP_BLOCKED",        "detail_tpl": "IP {ip} isolated — rule added to NGFW-01 & WAF. Suricata SID:2100498 triggered."},
+    "SQL_INJECTION":    {"action": "IP_BLOCKED",        "detail_tpl": "IP {ip} isolated ΓÇö rule added to NGFW-01 & WAF. Suricata SID:2100498 triggered."},
     "DATA_EXFILTRATION":{"action": "SESSION_KILLED",    "detail_tpl": "Outbound session to 45.33.32.156:443 terminated. Interface eth0 rate-limited. DLP alert raised."},
     "RANSOMWARE":       {"action": "PROCESS_TERMINATED","detail_tpl": "PID 4412 (powershell.exe) killed on WKSTN-07. Host quarantined from VLAN 10. Snapshot initiated."},
 }
@@ -153,7 +153,7 @@ DEFENSE_ACTIONS: dict[AttackVector, dict] = {
 
 _MALICIOUS_IPS = [
     "185.220.101.47",  # Known Tor exit node
-    "193.32.162.12",   # RU AS — blacklisted
+    "193.32.162.12",   # RU AS ΓÇö blacklisted
     "45.142.212.100",  # NL bulletproof hosting
     "194.165.16.76",
     "91.108.4.0",
@@ -230,7 +230,7 @@ async def _stream_attack(
     profile = ATTACK_PROFILES[attack_type]
     geo = _enrich_ip(source_ip)
 
-    # Phase 1 — preamble / scan
+    # Phase 1 ΓÇö preamble / scan
     yield {
         "type": "INCIDENT_OPEN",
         "incident_id": incident_id,
@@ -244,7 +244,7 @@ async def _stream_attack(
     }
     await asyncio.sleep(0.6)
 
-    # Phase 2 — individual log events
+    # Phase 2 ΓÇö individual log events
     for i, event in enumerate(profile["log_events"]):
         yield {
             "type": "LOG_EVENT",
@@ -256,7 +256,7 @@ async def _stream_attack(
         }
         await asyncio.sleep(random.uniform(0.4, 1.1))
 
-    # Phase 3 — defensive action summary
+    # Phase 3 ΓÇö defensive action summary
     defense = DEFENSE_ACTIONS[attack_type]
     yield {
         "type": "DEFENSE_ACTION",
@@ -335,7 +335,7 @@ async def analyze_with_ai(
     x_ai_provider: str = Header(default="groq", alias="X-AI-Provider"),
 ):
     """
-    BYOK proxy — the client sends its own AI API key in the header.
+    BYOK proxy ΓÇö the client sends its own AI API key in the header.
     Supports: groq (default), openai, deepseek.
     """
     profile = ATTACK_PROFILES[body.attack_type]
@@ -343,7 +343,7 @@ async def analyze_with_ai(
 
     system_prompt = (
         "You are a Senior SOC Analyst and Threat Intelligence expert. "
-        "Respond ONLY with a JSON object — no markdown, no code fences. "
+        "Respond ONLY with a JSON object ΓÇö no markdown, no code fences. "
         "Schema: {summary, mitre_technique, mitre_tactic, action_taken, action_detail, risk_score}"
     )
     user_prompt = (
@@ -389,7 +389,7 @@ async def analyze_with_ai(
     try:
         analysis: dict = json.loads(raw_content)
     except json.JSONDecodeError:
-        # Fallback — return the raw text wrapped
+        # Fallback ΓÇö return the raw text wrapped
         analysis = {
             "summary":         raw_content,
             "mitre_technique": profile["mitre_technique"],
@@ -406,7 +406,7 @@ async def analyze_with_ai(
         "action_detail": analysis.get("action_detail", ""),
         "raw_log":       body.raw_log,
         "ai_summary":    analysis.get("summary", ""),
-        "ai_mitre_map":  f"{analysis.get('mitre_technique')} — {analysis.get('mitre_tactic')}",
+        "ai_mitre_map":  f"{analysis.get('mitre_technique')} ΓÇö {analysis.get('mitre_tactic')}",
         "ai_model_used": config["model"],
         "automated":     True,
     }).execute()
@@ -418,7 +418,7 @@ async def analyze_with_ai(
     if analysis.get("action_taken") == "IP_BLOCKED":
         supabase.table("blocked_ips").upsert({
             "ip_address": body.raw_log.get("source_ip", "0.0.0.0"),
-            "reason":     f"{body.attack_type} — {analysis.get('mitre_technique')}",
+            "reason":     f"{body.attack_type} ΓÇö {analysis.get('mitre_technique')}",
             "incident_id": body.incident_id,
         }, on_conflict="ip_address").execute()
 
@@ -426,7 +426,7 @@ async def analyze_with_ai(
 
 
 # ---------------------------------------------------------------------------
-# WebSocket — live telemetry stream
+# WebSocket ΓÇö live telemetry stream
 # ---------------------------------------------------------------------------
 
 @app.websocket("/ws/telemetry")
