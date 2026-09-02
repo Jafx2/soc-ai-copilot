@@ -55,11 +55,11 @@ const SEV: Record<string, { dot: string; badge: string; label: string }> = {
 
 // ─── Synthetic init logs for empty state ─────────────────────────────────────
 const INIT_LOGS: { ts: string; level: string; type: string; source: string; detail: string; levelColor: string }[] = [
-  { ts: "--:--:--", level: "SYS", type: "BOOT", source: "soc-core", detail: "Detection engine initialized — MITRE ATT&CK v15 loaded", levelColor: "text-[#484f58]" },
-  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "ngfw-01", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
-  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "waf-proxy", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
-  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "edr-agent", detail: "Telemetry node online — awaiting traffic", levelColor: "text-[#484f58]" },
-  { ts: "--:--:--", level: "INFO", type: "STANDBY", source: "siem-core", detail: "Event stream open — inject a vector to begin simulation", levelColor: "text-[#3fb950]" },
+  { ts: "--:--:--", level: "SYS", type: "BOOT", source: "soc-core", detail: "Detection engine initialized - MITRE ATT&CK v15 loaded", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "ngfw-01", detail: "Telemetry node online - awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "waf-proxy", detail: "Telemetry node online - awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "SYS", type: "NODE_READY", source: "edr-agent", detail: "Telemetry node online - awaiting traffic", levelColor: "text-[#484f58]" },
+  { ts: "--:--:--", level: "INFO", type: "STANDBY", source: "siem-core", detail: "Event stream open - inject a vector to begin simulation", levelColor: "text-[#3fb950]" },
 ];
 
 // ─── Sparkline component ──────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ function Sparkline({ width = 56, height = 18 }: { width?: number; height?: numbe
         </linearGradient>
       </defs>
       <path d={areaPath} fill="url(#spark-fill)" />
-      <path d={linePath} fill="none" stroke="#3fb950" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={linePath} fill="none" stroke="#3fb950" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" style={{ transition: "d 0.4s ease" }} />
     </svg>
   );
 }
@@ -229,8 +229,8 @@ export default function Page() {
         </div>
 
         {/* Status */}
-        <div className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded border mr-3 ${isRunning ? "border-[#d29922]/30 text-[#d29922] bg-[#d29922]/8" : "border-[#238636]/30 text-[#3fb950] bg-[#238636]/8"}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${isRunning ? "bg-[#d29922] animate-pulse" : "bg-[#3fb950]"}`} />
+        <div className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded border mr-3 transition-all duration-500 ${isRunning ? "border-[#d29922]/30 text-[#d29922] bg-[#d29922]/8" : "border-[#238636]/30 text-[#3fb950] bg-[#238636]/8"}`}>
+          <span className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${isRunning ? "bg-[#d29922] animate-pulse" : "bg-[#3fb950] animate-pulse"}`} />
           {isRunning ? "Simulation running" : "All systems nominal"}
         </div>
 
@@ -266,10 +266,10 @@ export default function Page() {
                       onClick={() => !isRunning && launch(v.id)}
                       disabled={isRunning}
                       className={`w-full text-left rounded px-3 py-2.5 border transition-all ${active
-                          ? "border-[#58a6ff]/40 bg-[#58a6ff]/8"
-                          : isRunning
-                            ? "border-[#30363d] opacity-50 cursor-not-allowed"
-                            : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"
+                        ? "border-[#58a6ff]/40 bg-[#58a6ff]/8"
+                        : isRunning
+                          ? "border-[#30363d] opacity-50 cursor-not-allowed"
+                          : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"
                         }`}
                     >
                       {/* Row 1: severity badge + technique — both shrink-0, never overlap */}
@@ -571,7 +571,7 @@ function EventRow({ ev }: { ev: WsEvent }) {
         <span className="w-14 shrink-0"><span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#da3633]/30 text-[#da3633] bg-[#da3633]/8">ALERT</span></span>
         <span className="w-28 text-[#8b949e] shrink-0">INCIDENT_OPEN</span>
         <span className="w-32 font-mono text-[#58a6ff] shrink-0 truncate">{e.source_ip}</span>
-        <span className="flex-1 text-[#c9d1d9] truncate">{e.attack_type.replace(/_/g, " ")} · {e.country} · risk <span className={e.risk_score >= 80 ? "text-[#da3633]" : "text-[#d29922]"}>{e.risk_score}/100</span>{e.is_tor ? " · TOR" : ""}</span>
+        <span className="flex-1 text-[#c9d1d9] truncate">{e.attack_type.replace(/_/g, " ")} | {e.country} | risk <span className={e.risk_score >= 80 ? "text-[#da3633]" : "text-[#d29922]"}>{e.risk_score}/100</span>{e.is_tor ? " | TOR" : ""}</span>
       </div>
     );
   }
