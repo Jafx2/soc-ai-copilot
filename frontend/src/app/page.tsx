@@ -17,6 +17,7 @@ import type {
   AIAnalysis, AIKeyConfig, AttackVector,
   WsEvent, WsIncidentOpen, WsLogEvent, WsDefenseAction
 } from "@/types";
+import TelemetryMetrics from "@/components/TelemetryMetrics";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -336,6 +337,10 @@ export default function Page() {
 
         {/* ── Col 2: Event feed ── */}
         <main className="flex flex-col overflow-hidden bg-[#0d1117]">
+          <TelemetryMetrics events={events} isRunning={isRunning} />
+
+          {/* Feed header */}
+          <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0"></div>
           {/* Feed header */}
           <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0">
             <Terminal className="w-3.5 h-3.5 text-[#8b949e]" />
@@ -517,11 +522,11 @@ export default function Page() {
             </div>
           </div>
         </aside>
-      </div>
+      </div >
 
       {/* ── Modal ── */}
       {keyModalOpen && <KeyModal onClose={() => setKeyModalOpen(false)} onSave={c => { setAIConfig(c); saveKey(c); setKeyModalOpen(false); }} />}
-    </div>
+    </div >
   );
 }
 
