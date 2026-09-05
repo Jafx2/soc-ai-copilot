@@ -133,7 +133,7 @@ export default function TelemetryMetrics({ events, isRunning }: Props) {
         const buckets: Record<string, number> = {};
 
         events.forEach((ev) => {
-            const raw = (ev as Record<string, unknown>).timestamp as string | undefined;
+            const raw = (ev as unknown as Record<string, unknown>).timestamp as string | undefined;
             let key: string;
             if (raw) {
                 const d = new Date(raw);
