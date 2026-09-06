@@ -18,6 +18,8 @@ import type {
   WsEvent, WsIncidentOpen, WsLogEvent, WsDefenseAction
 } from "@/types";
 import TelemetryMetrics from "@/components/TelemetryMetrics";
+import ReportModal from "@/components/ReportModal";
+import { generateReport } from "@/lib/generateReport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -138,6 +140,7 @@ export default function Page() {
   const [incident, setIncident] = useState<WsIncidentOpen | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
+  const [reportModal, setReportModal] = useState<{ markdown: string; filename: string } | null>(null);
 
   const socketRef = useRef<{ close: () => void } | null>(null);
   const rawLogsRef = useRef<Record<string, unknown>[]>([]);
@@ -187,6 +190,13 @@ export default function Page() {
 
   useEffect(() => () => socketRef.current?.close(), []);
   const reset = () => { setEvents([]); setIncident(null); setAnalysis(null); setActiveVector(null); setIsRunning(false); };
+
+  const handleExportReport = () => {
+    if (!incident) return;
+    const markdown = generateReport(incident, events, analysis);
+    const filename = `INCIDENT_REPORT_${incident.source_ip.replace(/\./g, "_")}.md`;
+    setReportModal({ markdown, filename });
+  };
 
   const incidentCount = events.filter(e => e.type === "INCIDENT_OPEN").length;
 
@@ -445,6 +455,10 @@ export default function Page() {
                   ))}
                 </div>
 
+                <button onClick={handleExportReport} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#8b949e] transition-colors">
+                  Export Forensic Report
+                </button>
+
                 <div className="flex gap-1.5 flex-wrap">
                   {incident.is_tor && <Flag label="TOR EXIT NODE" color="red" />}
                   {incident.is_vpn && <Flag label="VPN" color="yellow" />}
@@ -526,6 +540,7 @@ export default function Page() {
 
       {/* ── Modal ── */}
       {keyModalOpen && <KeyModal onClose={() => setKeyModalOpen(false)} onSave={c => { setAIConfig(c); saveKey(c); setKeyModalOpen(false); }} />}
+      {reportModal && <ReportModal markdown={reportModal.markdown} filename={reportModal.filename} onClose={() => setReportModal(null)} />}
     </div >
   );
 }
