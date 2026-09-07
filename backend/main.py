@@ -246,6 +246,17 @@ async def _stream_attack(
 
     # Phase 2 ΓÇö individual log events
     for i, event in enumerate(profile["log_events"]):
+        try:
+            supabase.table("telemetry_logs").insert({
+                "incident_id": incident_id,
+                "sequence": i + 1,
+                "source_ip": source_ip,
+                "event_type": str(event.get("event", "UNKNOWN")),
+                "event_data": event,
+                "timestamp": _utc_now(),
+            }).execute()
+        except Exception:
+            pass
         yield {
             "type": "LOG_EVENT",
             "incident_id": incident_id,
@@ -300,6 +311,26 @@ async def get_incident(incident_id: str):
 @app.get("/api/blocked-ips")
 async def list_blocked_ips():
     result = supabase.table("blocked_ips").select("*").eq("is_active", True).order("blocked_at", desc=True).execute()
+    return result.data
+
+
+@app.get("/api/telemetry/logs")
+async def list_telemetry_logs(
+    limit: int = 100,
+    event_type: str | None = None,
+    incident_id: str | None = None,
+):
+    query = (
+        supabase.table("telemetry_logs")
+        .select("*")
+        .order("timestamp", desc=True)
+        .limit(limit)
+    )
+    if event_type:
+        query = query.eq("event_type", event_type)
+    if incident_id:
+        query = query.eq("incident_id", incident_id)
+    result = query.execute()
     return result.data
 
 

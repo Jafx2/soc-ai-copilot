@@ -19,6 +19,7 @@ import type {
 } from "@/types";
 import TelemetryMetrics from "@/components/TelemetryMetrics";
 import ReportModal from "@/components/ReportModal";
+import AuditLogPanel from "@/components/AuditLogPanel";
 import { generateReport } from "@/lib/generateReport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -132,6 +133,7 @@ const SYSTEM_METRICS = [
 // ROOT PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function Page() {
+  const [activeTab, setActiveTab] = useState<string>("Incident Response");
   const [aiConfig, setAIConfig] = useState<AIKeyConfig | null>(null);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -214,10 +216,10 @@ export default function Page() {
 
         {/* Nav tabs */}
         <nav className="flex items-center gap-0 h-full text-xs">
-          <TabItem label="Incident Response" active />
-          <TabItem label="Detection Rules" />
-          <TabItem label="Threat Intel" />
-          <TabItem label="Audit Log" />
+          <TabItem label="Incident Response" active={activeTab === "Incident Response"} onClick={() => setActiveTab("Incident Response")} />
+          <TabItem label="Detection Rules" active={activeTab === "Detection Rules"} onClick={() => setActiveTab("Detection Rules")} />
+          <TabItem label="Threat Intel" active={activeTab === "Threat Intel"} onClick={() => setActiveTab("Threat Intel")} />
+          <TabItem label="Audit Log" active={activeTab === "Audit Log"} onClick={() => setActiveTab("Audit Log")} />
         </nav>
 
         <div className="flex-1" />
@@ -256,7 +258,8 @@ export default function Page() {
       </header>
 
       {/* ── Main layout ── */}
-      <div className="flex-1 grid overflow-hidden" style={{ gridTemplateColumns: "280px 1fr 320px" }}>
+      {activeTab === "Incident Response" && (
+        <div className="flex-1 grid overflow-hidden" style={{ gridTemplateColumns: "280px 1fr 320px" }}>
 
         {/* ── Col 1: Attack injector ── */}
         <aside className="border-r border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
@@ -536,7 +539,22 @@ export default function Page() {
             </div>
           </div>
         </aside>
-      </div >
+        </div>
+      )}
+
+      {activeTab === "Audit Log" && (
+        <div className="flex-1 overflow-hidden">
+          <AuditLogPanel />
+        </div>
+      )}
+
+      {(activeTab === "Detection Rules" || activeTab === "Threat Intel") && (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-[11px] text-[#484f58] font-mono">
+            {activeTab} not yet implemented
+          </p>
+        </div>
+      )}
 
       {/* ── Modal ── */}
       {keyModalOpen && <KeyModal onClose={() => setKeyModalOpen(false)} onSave={c => { setAIConfig(c); saveKey(c); setKeyModalOpen(false); }} />}
@@ -549,9 +567,9 @@ export default function Page() {
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function TabItem({ label, active = false }: { label: string; active?: boolean }) {
+function TabItem({ label, active = false, onClick }: { label: string; active?: boolean; onClick?: () => void }) {
   return (
-    <div className={`h-full flex items-center px-4 text-xs border-b-2 cursor-pointer transition-colors ${active ? "border-[#f78166] text-[#e6edf3] font-medium" : "border-transparent text-[#8b949e] hover:text-[#c9d1d9]"}`}>
+    <div onClick={onClick} className={`h-full flex items-center px-4 text-xs border-b-2 cursor-pointer transition-colors ${active ? "border-[#f78166] text-[#e6edf3] font-medium" : "border-transparent text-[#8b949e] hover:text-[#c9d1d9]"}`}>
       {label}
     </div>
   );
