@@ -84,6 +84,29 @@ class AIAnalysisResult(BaseModel):
     risk_score: int
 
 
+class DetectionRule(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    event_type: str
+    severity_override: str
+    action_label: str
+    is_active: bool
+    created_at: str | None = None
+
+
+class CreateRuleRequest(BaseModel):
+    name: str
+    description: str | None = None
+    event_type: str
+    severity_override: str
+    action_label: str = "ALERT_RAISED"
+
+
+class PatchRuleRequest(BaseModel):
+    is_active: bool
+
+
 # ---------------------------------------------------------------------------
 # Attack simulation payloads (MITRE ATT&CK aligned)
 # ---------------------------------------------------------------------------
@@ -227,6 +250,12 @@ async def _stream_attack(
     incident_id: str,
 ) -> AsyncGenerator[dict, None]:
     """Yields one telemetry event at a time with realistic inter-event delays."""
+    try:
+        rules_result = supabase.table("detection_rules").select("*").eq("is_active", True).execute()
+        active_rules: list[dict] = rules_result.data or []
+    except Exception:
+        active_rules = []
+
     profile = ATTACK_PROFILES[attack_type]
     geo = _enrich_ip(source_ip)
 
@@ -257,6 +286,23 @@ async def _stream_attack(
             }).execute()
         except Exception:
             pass
+        matched_rules = [
+            r for r in active_rules
+            if r["event_type"] == str(event.get("event", ""))
+        ]
+        for rule in matched_rules:
+            yield {
+                "type": "RULE_MATCH",
+                "incident_id": incident_id,
+                "rule_id": rule["id"],
+                "rule_name": rule["name"],
+                "event_type": rule["event_type"],
+                "severity_override": rule["severity_override"],
+                "action_label": rule["action_label"],
+                "source_ip": source_ip,
+                "timestamp": _utc_now(),
+            }
+            await asyncio.sleep(0.1)
         yield {
             "type": "LOG_EVENT",
             "incident_id": incident_id,
@@ -332,6 +378,38 @@ async def list_telemetry_logs(
         query = query.eq("incident_id", incident_id)
     result = query.execute()
     return result.data
+
+
+@app.get("/api/rules")
+async def list_rules():
+    result = supabase.table("detection_rules").select("*").order("created_at", desc=False).execute()
+    return result.data
+
+
+@app.post("/api/rules")
+async def create_rule(body: CreateRuleRequest):
+    result = supabase.table("detection_rules").insert({
+        "name": body.name,
+        "description": body.description,
+        "event_type": body.event_type,
+        "severity_override": body.severity_override,
+        "action_label": body.action_label,
+    }).execute()
+    return result.data[0] if result.data else {}
+
+
+@app.patch("/api/rules/{rule_id}")
+async def toggle_rule(rule_id: str, body: PatchRuleRequest):
+    result = supabase.table("detection_rules").update({
+        "is_active": body.is_active
+    }).eq("id", rule_id).execute()
+    return result.data[0] if result.data else {}
+
+
+@app.delete("/api/rules/{rule_id}")
+async def delete_rule(rule_id: str):
+    supabase.table("detection_rules").delete().eq("id", rule_id).execute()
+    return {"deleted": rule_id}
 
 
 @app.post("/api/simulate")

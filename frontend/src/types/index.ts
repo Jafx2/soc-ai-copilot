@@ -3,13 +3,14 @@ export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type IncidentStatus = "OPEN" | "INVESTIGATING" | "MITIGATED" | "RESOLVED" | "FALSE_POSITIVE";
 export type AIProvider = "groq" | "openai" | "deepseek" | "gemini";
 export type DefenseAction = "IP_BLOCKED" | "SESSION_KILLED" | "PROCESS_TERMINATED";
-export type WsEventType = "INCIDENT_OPEN" | "LOG_EVENT" | "DEFENSE_ACTION" | "SIMULATION_COMPLETE" | "ERROR";
+export type WsEventType = "INCIDENT_OPEN" | "LOG_EVENT" | "RULE_MATCH" | "DEFENSE_ACTION" | "SIMULATION_COMPLETE" | "ERROR";
 export interface WsIncidentOpen { type: "INCIDENT_OPEN"; incident_id: string; attack_type: AttackVector; mitre_technique: string; mitre_tactic: string; severity: Severity; source_ip: string; country: string; city: string; asn: string; is_tor: boolean; is_vpn: boolean; is_proxy: boolean; risk_score: number; timestamp: string; }
 export interface WsLogEvent { type: "LOG_EVENT"; incident_id: string; sequence: number; source_ip: string; data: Record<string, unknown>; timestamp: string; }
 export interface WsDefenseAction { type: "DEFENSE_ACTION"; incident_id: string; action: DefenseAction; detail: string; automated: boolean; timestamp: string; }
+export interface WsRuleMatch { type: "RULE_MATCH"; incident_id: string; rule_id: string; rule_name: string; event_type: string; severity_override: string; action_label: string; source_ip: string; timestamp: string; }
 export interface WsSimulationComplete { type: "SIMULATION_COMPLETE"; incident_id: string; timestamp: string; }
 export interface WsError { type: "ERROR"; message: string; }
-export type WsEvent = WsIncidentOpen | WsLogEvent | WsDefenseAction | WsSimulationComplete | WsError;
+export type WsEvent = WsIncidentOpen | WsLogEvent | WsRuleMatch | WsDefenseAction | WsSimulationComplete | WsError;
 export interface Incident { id: string; attack_type: AttackVector; mitre_technique: string; mitre_tactic: string; severity: Severity; source_ip: string; country: string | null; city: string | null; asn: string | null; is_tor: boolean; is_vpn: boolean; is_proxy: boolean; risk_score: number | null; status: IncidentStatus; created_at: string; updated_at: string; }
 export interface AIAnalysis { summary: string; mitre_technique: string; mitre_tactic: string; action_taken: DefenseAction; action_detail: string; risk_score: number; }
 export interface BlockedIP { id: string; ip_address: string; reason: string; blocked_at: string; is_active: boolean; }

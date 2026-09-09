@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import type {
   AIAnalysis, AIKeyConfig, AttackVector,
-  WsEvent, WsIncidentOpen, WsLogEvent, WsDefenseAction
+  WsEvent, WsIncidentOpen, WsLogEvent, WsRuleMatch, WsDefenseAction
 } from "@/types";
 import TelemetryMetrics from "@/components/TelemetryMetrics";
 import ReportModal from "@/components/ReportModal";
 import AuditLogPanel from "@/components/AuditLogPanel";
+import DetectionRulesPanel from "@/components/DetectionRulesPanel";
 import { generateReport } from "@/lib/generateReport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -548,7 +549,13 @@ export default function Page() {
         </div>
       )}
 
-      {(activeTab === "Detection Rules" || activeTab === "Threat Intel") && (
+      {activeTab === "Detection Rules" && (
+        <div className="flex-1 overflow-hidden">
+          <DetectionRulesPanel />
+        </div>
+      )}
+
+      {activeTab === "Threat Intel" && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-[11px] text-[#484f58] font-mono">
             {activeTab} not yet implemented
@@ -646,6 +653,27 @@ function EventRow({ ev }: { ev: WsEvent }) {
         <span className="w-28 text-[#484f58] font-mono shrink-0">SIM_DONE</span>
         <span className="w-32 shrink-0" />
         <span className="flex-1 text-[#484f58] italic">Simulation complete — triage pipeline running</span>
+      </div>
+    );
+  }
+  if (ev.type === "RULE_MATCH") {
+    const e = ev as WsRuleMatch;
+    const sevColors: Record<string, string> = {
+      CRITICAL: "text-[#da3633]",
+      HIGH: "text-[#d29922]",
+      MEDIUM: "text-[#58a6ff]",
+      LOW: "text-[#3fb950]",
+    };
+    const sevColor = sevColors[e.severity_override] ?? "text-[#8b949e]";
+    return (
+      <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] bg-[#d29922]/5 hover:bg-[#d29922]/10 transition-colors">
+        <span className="w-20 text-[#8b949e] shrink-0">{ts}</span>
+        <span className="w-14 shrink-0">
+          <span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#d29922]/40 text-[#d29922] bg-[#d29922]/15">RULE</span>
+        </span>
+        <span className="w-28 font-mono text-[#d29922] shrink-0 truncate">{e.action_label}</span>
+        <span className="w-32 font-mono text-[#58a6ff] shrink-0 truncate">{e.source_ip}</span>
+        <span className={`flex-1 truncate font-mono text-[11px] ${sevColor}`}>{e.rule_name} | {e.event_type} | {e.severity_override}</span>
       </div>
     );
   }
