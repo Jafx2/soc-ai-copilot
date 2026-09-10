@@ -107,6 +107,10 @@ class PatchRuleRequest(BaseModel):
     is_active: bool
 
 
+class ThreatIntelRequest(BaseModel):
+    target: str
+
+
 # ---------------------------------------------------------------------------
 # Attack simulation payloads (MITRE ATT&CK aligned)
 # ---------------------------------------------------------------------------
@@ -412,6 +416,78 @@ async def delete_rule(rule_id: str):
     return {"deleted": rule_id}
 
 
+@app.post("/api/threat-intel/lookup")
+async def threat_intel_lookup(
+    body: ThreatIntelRequest,
+    x_ai_key: str = Header(..., alias="X-AI-Key"),
+    x_ai_provider: str = Header(default="groq", alias="X-AI-Provider"),
+):
+    system_prompt = (
+        "You are a Threat Intelligence analyst with access to global IP reputation databases, "
+        "OSINT feeds, and cybersecurity threat data. "
+        "Respond ONLY with a valid JSON object. No markdown, no code fences, no explanation. "
+        "Schema: {"
+        "\"ip_or_domain\": string, "
+        "\"risk_score\": integer 0-100, "
+        "\"risk_level\": \"LOW\" | \"MEDIUM\" | \"HIGH\" | \"CRITICAL\", "
+        "\"country\": string, "
+        "\"reputation_summary\": string (2-3 sentences), "
+        "\"associated_threats\": array of strings, "
+        "\"recommended_action\": string"
+        "}"
+    )
+    user_prompt = (
+        f"Analyze this target for cybersecurity threats: {body.target}\n\n"
+        "Consider: known malicious IPs, Tor exit nodes, botnets, C2 servers, "
+        "brute force sources, phishing domains, VPN/proxy abuse, and geopolitical risk. "
+        "Return a realistic threat assessment as JSON."
+    )
+
+    provider_config = {
+        "groq": {"url": "https://api.groq.com/openai/v1/chat/completions", "model": "llama3-70b-8192"},
+        "openai": {"url": "https://api.openai.com/v1/chat/completions", "model": "gpt-4o-mini"},
+        "deepseek": {"url": "https://api.deepseek.com/v1/chat/completions", "model": "deepseek-chat"},
+        "gemini": {"url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "model": "gemini-2.0-flash"},
+    }
+    config = provider_config.get(x_ai_provider.lower(), provider_config["groq"])
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            config["url"],
+            headers={"Authorization": f"Bearer {x_ai_key}", "Content-Type": "application/json"},
+            json={
+                "model": config["model"],
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 600,
+            },
+        )
+
+    if resp.status_code != 200:
+        raise HTTPException(502, f"AI provider error: {resp.text}")
+
+    raw_content: str = resp.json()["choices"][0]["message"]["content"]
+
+    try:
+        clean = raw_content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        result = json.loads(clean)
+    except json.JSONDecodeError:
+        result = {
+            "ip_or_domain": body.target,
+            "risk_score": 0,
+            "risk_level": "UNKNOWN",
+            "country": "Unknown",
+            "reputation_summary": raw_content,
+            "associated_threats": [],
+            "recommended_action": "Manual review required.",
+        }
+
+    return result
+
+
 @app.post("/api/simulate")
 async def trigger_simulation(body: SimulateRequest):
     """
@@ -472,6 +548,7 @@ async def analyze_with_ai(
         "groq":     {"url": "https://api.groq.com/openai/v1/chat/completions",   "model": "llama3-70b-8192"},
         "openai":   {"url": "https://api.openai.com/v1/chat/completions",         "model": "gpt-4o-mini"},
         "deepseek": {"url": "https://api.deepseek.com/v1/chat/completions",       "model": "deepseek-chat"},
+        "gemini":   {"url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "model": "gemini-2.0-flash"},
     }
     config = provider_config.get(x_ai_provider.lower(), provider_config["groq"])
 

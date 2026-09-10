@@ -21,6 +21,7 @@ import TelemetryMetrics from "@/components/TelemetryMetrics";
 import ReportModal from "@/components/ReportModal";
 import AuditLogPanel from "@/components/AuditLogPanel";
 import DetectionRulesPanel from "@/components/DetectionRulesPanel";
+import ThreatIntelPanel from "@/components/ThreatIntelPanel";
 import { generateReport } from "@/lib/generateReport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -556,10 +557,8 @@ export default function Page() {
       )}
 
       {activeTab === "Threat Intel" && (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-[11px] text-[#484f58] font-mono">
-            {activeTab} not yet implemented
-          </p>
+        <div className="flex-1 overflow-hidden">
+          <ThreatIntelPanel />
         </div>
       )}
 
