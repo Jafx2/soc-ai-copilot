@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Shield, Trash2 } from "lucide-react";
+import { Shield, Trash2 } from "lucide-react";
 
 interface DetectionRule {
   id: string;
@@ -125,7 +125,23 @@ export default function DetectionRulesPanel() {
         <div className="grid grid-cols-[72px_minmax(180px,2fr)_minmax(120px,1fr)_100px_minmax(120px,1fr)_32px] gap-3 px-4 py-2 border-b border-[#30363d] bg-[#0d1117] text-[9px] font-mono font-bold text-[#8b949e] uppercase tracking-wider sticky top-0">
           <span>Status</span><span>Name</span><span>Event Type</span><span>Severity</span><span>Action</span><span />
         </div>
-        {loading ? <div className="h-32 flex items-center justify-center"><Loader2 className="w-4 h-4 text-[#58a6ff] animate-spin" /></div> : rules.length === 0 ? <div className="h-32 flex items-center justify-center px-4 text-center text-[11px] text-[#484f58] font-mono">No detection rules configured. Create your first rule to begin evaluating telemetry events.</div> : rules.map(rule => (
+        {loading ? (
+          <div className="flex flex-col gap-0">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-[72px_minmax(180px,2fr)_minmax(120px,1fr)_100px_minmax(120px,1fr)_32px] gap-3 items-center px-4 py-3 border-b border-[#21262d]">
+                <div className="w-7 h-4 rounded-full bg-[#21262d] animate-pulse" />
+                <div className="space-y-1.5">
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse w-3/4" />
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse w-1/2" />
+                </div>
+                <div className="h-2 rounded bg-[#21262d] animate-pulse w-20" />
+                <div className="h-4 rounded bg-[#21262d] animate-pulse w-14" />
+                <div className="h-2 rounded bg-[#21262d] animate-pulse w-24" />
+                <div className="w-3.5 h-3.5 rounded bg-[#21262d] animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : rules.length === 0 ? <div className="h-32 flex items-center justify-center px-4 text-center text-[11px] text-[#484f58] font-mono">No detection rules configured. Create your first rule to begin evaluating telemetry events.</div> : rules.map(rule => (
           <div key={rule.id} className="grid grid-cols-[72px_minmax(180px,2fr)_minmax(120px,1fr)_100px_minmax(120px,1fr)_32px] gap-3 items-center px-4 py-2 border-b border-[#21262d] hover:bg-[#161b22] font-mono text-[11px]">
             <div onClick={() => void handleToggle(rule.id, rule.is_active)} className={`relative w-7 h-4 rounded-full cursor-pointer transition-colors duration-200 ${rule.is_active ? "bg-[#238636]" : "bg-[#30363d]"}`}><div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform duration-200 ${rule.is_active ? "translate-x-3.5" : "translate-x-0.5"}`} /></div>
             <div className="min-w-0"><div className="text-[#c9d1d9] truncate">{rule.name}</div>{rule.description && <div className="text-[#484f58] text-[10px] truncate mt-0.5">{rule.description}</div>}</div>

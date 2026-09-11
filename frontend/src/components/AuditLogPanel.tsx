@@ -70,7 +70,27 @@ export default function AuditLogPanel() {
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="h-full flex items-center justify-center text-[11px] text-[#484f58] font-mono">Loading telemetry logs...</div>
+          <div className="flex flex-col gap-0">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d]">
+                <div className="w-24 shrink-0 pr-4">
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse w-14" />
+                </div>
+                <div className="w-32 shrink-0 pr-4">
+                  <div className="h-4 rounded bg-[#21262d] animate-pulse w-20" />
+                </div>
+                <div className="w-32 shrink-0 pr-4">
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse w-24" />
+                </div>
+                <div className="w-36 shrink-0 pr-4">
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse w-16" />
+                </div>
+                <div className="flex-1">
+                  <div className="h-2 rounded bg-[#21262d] animate-pulse" style={{ width: `${55 + (i % 4) * 10}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filteredLogs.length === 0 ? (
           <div className="h-full flex items-center justify-center text-[11px] text-[#484f58] font-mono text-center px-4">No telemetry logs recorded. Run a simulation to populate the audit log.</div>
         ) : (
