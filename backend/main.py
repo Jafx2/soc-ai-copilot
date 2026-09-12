@@ -447,7 +447,7 @@ async def threat_intel_lookup(
         "groq": {"url": "https://api.groq.com/openai/v1/chat/completions", "model": "llama3-70b-8192"},
         "openai": {"url": "https://api.openai.com/v1/chat/completions", "model": "gpt-4o-mini"},
         "deepseek": {"url": "https://api.deepseek.com/v1/chat/completions", "model": "deepseek-chat"},
-        "gemini": {"url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "model": "gemini-2.0-flash"},
+        "gemini": {"url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "model": "gemini-3.8-flash"},
     }
     config = provider_config.get(x_ai_provider.lower(), provider_config["groq"])
 
