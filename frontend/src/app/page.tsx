@@ -36,7 +36,7 @@ const AI_PROVIDERS: Record<AIProviderKey, { label: string; placeholder: string; 
   groq: { label: "Groq / Llama-3-70B", placeholder: "gsk_...", docsUrl: "https://console.groq.com/keys" },
   openai: { label: "OpenAI / GPT-4o-mini", placeholder: "sk-...", docsUrl: "https://platform.openai.com/api-keys" },
   deepseek: { label: "DeepSeek / Chat", placeholder: "sk-...", docsUrl: "https://platform.deepseek.com" },
-  gemini: { label: "Google / Gemini 2.0", placeholder: "AIza...", docsUrl: "https://aistudio.google.com/app/apikey" },
+  gemini: { label: "Google / Gemini 3.8", placeholder: "AIza...", docsUrl: "https://aistudio.google.com/app/apikey" },
 };
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -263,283 +263,283 @@ export default function Page() {
       {activeTab === "Incident Response" && (
         <div className="flex-1 grid overflow-hidden" style={{ gridTemplateColumns: "280px 1fr 320px" }}>
 
-        {/* ── Col 1: Attack injector ── */}
-        <aside className="border-r border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
-          <SectionHeader icon={<Zap className="w-3.5 h-3.5" />} label="Attack Simulation" count={incidentCount} />
+          {/* ── Col 1: Attack injector ── */}
+          <aside className="border-r border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
+            <SectionHeader icon={<Zap className="w-3.5 h-3.5" />} label="Attack Simulation" count={incidentCount} />
 
-          <div className="flex-1 overflow-y-auto">
-            {/* Injector */}
-            <div className="p-3 border-b border-[#30363d]">
-              <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Inject Vector</p>
-              <div className="space-y-1.5">
-                {VECTORS.map(v => {
-                  const active = activeVector === v.id && isRunning;
-                  const sev = SEV[v.severity];
-                  return (
-                    // ── FIX 1: Vertical layout prevents badge/title collision ──
-                    <button
-                      key={v.id}
-                      onClick={() => !isRunning && launch(v.id)}
-                      disabled={isRunning}
-                      className={`w-full text-left rounded px-3 py-2.5 border transition-all ${active
-                        ? "border-[#58a6ff]/40 bg-[#58a6ff]/8"
-                        : isRunning
-                          ? "border-[#30363d] opacity-50 cursor-not-allowed"
-                          : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"
-                        }`}
-                    >
-                      {/* Row 1: severity badge + technique — both shrink-0, never overlap */}
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${sev.badge}`}>
-                          {sev.label}
-                        </span>
-                        <span className="text-[10px] font-mono text-[#58a6ff] shrink-0">{v.technique}</span>
-                      </div>
-                      {/* Row 2: label on its own line — full width, no collision risk */}
-                      <p className="text-[11px] text-[#c9d1d9] font-medium leading-snug">{v.label}</p>
-                      {/* Row 3: tactic */}
-                      <p className="text-[10px] text-[#8b949e] mt-0.5">{v.tactic}</p>
-                      {/* Row 4: progress bar if active */}
-                      {active && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          <div className="h-0.5 flex-1 bg-[#30363d] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#58a6ff] rounded-full animate-pulse" style={{ width: "60%" }} />
-                          </div>
-                          <span className="text-[9px] text-[#58a6ff] font-mono shrink-0">RUNNING</span>
+            <div className="flex-1 overflow-y-auto">
+              {/* Injector */}
+              <div className="p-3 border-b border-[#30363d]">
+                <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Inject Vector</p>
+                <div className="space-y-1.5">
+                  {VECTORS.map(v => {
+                    const active = activeVector === v.id && isRunning;
+                    const sev = SEV[v.severity];
+                    return (
+                      // ── FIX 1: Vertical layout prevents badge/title collision ──
+                      <button
+                        key={v.id}
+                        onClick={() => !isRunning && launch(v.id)}
+                        disabled={isRunning}
+                        className={`w-full text-left rounded px-3 py-2.5 border transition-all ${active
+                          ? "border-[#58a6ff]/40 bg-[#58a6ff]/8"
+                          : isRunning
+                            ? "border-[#30363d] opacity-50 cursor-not-allowed"
+                            : "border-[#30363d] bg-[#161b22] hover:border-[#8b949e] hover:bg-[#21262d] cursor-pointer"
+                          }`}
+                      >
+                        {/* Row 1: severity badge + technique — both shrink-0, never overlap */}
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${sev.badge}`}>
+                            {sev.label}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#58a6ff] shrink-0">{v.technique}</span>
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Session incidents */}
-            <div className="p-3">
-              <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Session Incidents</p>
-              {events.filter(e => e.type === "INCIDENT_OPEN").length === 0
-                ? <p className="text-[11px] text-[#484f58] px-1 italic">No incidents this session.</p>
-                : events.filter(e => e.type === "INCIDENT_OPEN").map((e, i) => {
-                  const inc = e as WsIncidentOpen;
-                  const sev = SEV[inc.severity] ?? SEV.LOW;
-                  return (
-                    <div key={i} className="flex items-start gap-2 px-1 py-1.5 rounded hover:bg-[#161b22] transition-colors">
-                      <span className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${sev.dot}`} />
-                      <div className="min-w-0">
-                        <p className="text-[11px] text-[#c9d1d9] font-mono truncate">{inc.source_ip}</p>
-                        <p className="text-[10px] text-[#8b949e] truncate">{inc.attack_type.replace(/_/g, " ")} · {inc.country}</p>
-                      </div>
-                      <span className={`ml-auto text-[9px] font-bold px-1 py-0.5 rounded border shrink-0 ${sev.badge}`}>{sev.label}</span>
-                    </div>
-                  );
-                })
-              }
-            </div>
-
-            {/* Detection nodes */}
-            <div className="p-3 border-t border-[#30363d]">
-              <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Detection Nodes</p>
-              {[["ngfw-01", "online"], ["waf-proxy", "online"], ["edr-agent", "online"], ["siem-core", "online"]].map(([node, status]) => (
-                <div key={node} className="flex items-center gap-2 px-1 py-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950] shrink-0" />
-                  <span className="text-[11px] font-mono text-[#8b949e] flex-1">{node}</span>
-                  <span className="text-[10px] text-[#3fb950]">{status}</span>
+                        {/* Row 2: label on its own line — full width, no collision risk */}
+                        <p className="text-[11px] text-[#c9d1d9] font-medium leading-snug">{v.label}</p>
+                        {/* Row 3: tactic */}
+                        <p className="text-[10px] text-[#8b949e] mt-0.5">{v.tactic}</p>
+                        {/* Row 4: progress bar if active */}
+                        {active && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <div className="h-0.5 flex-1 bg-[#30363d] rounded-full overflow-hidden">
+                              <div className="h-full bg-[#58a6ff] rounded-full animate-pulse" style={{ width: "60%" }} />
+                            </div>
+                            <span className="text-[9px] text-[#58a6ff] font-mono shrink-0">RUNNING</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* ── Col 2: Event feed ── */}
-        <main className="flex flex-col overflow-hidden bg-[#0d1117]">
-          <TelemetryMetrics events={events} isRunning={isRunning} />
-
-          {/* Feed header */}
-          <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0">
-            <Terminal className="w-3.5 h-3.5 text-[#8b949e]" />
-            <span className="text-xs font-medium text-[#8b949e]">Event Stream</span>
-            <span className="text-[10px] font-mono text-[#484f58]">—</span>
-            <span className="text-[10px] font-mono text-[#8b949e]">{events.length > 0 ? events.length : INIT_LOGS.length} events</span>
-            {isRunning && (
-              <div className="flex items-center gap-1.5 ml-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950] animate-pulse" />
-                <span className="text-[10px] text-[#3fb950] font-medium">LIVE</span>
               </div>
-            )}
-            <div className="flex-1" />
-            <button className="flex items-center gap-1 text-[10px] text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded border border-[#30363d] hover:border-[#8b949e] transition-colors">
-              <Filter className="w-3 h-3" />Filter
-            </button>
-          </div>
 
-          {/* ── FIX 2: Column headers always visible ── */}
-          <div className="flex items-center gap-0 h-7 border-b border-[#30363d] bg-[#161b22] px-4 shrink-0">
-            {[["TIME", "w-20"], ["LEVEL", "w-14"], ["TYPE", "w-28"], ["SOURCE", "w-32"], ["DETAIL", "flex-1"]].map(([l, w]) => (
-              <div key={l} className={`${w} text-[9px] font-semibold text-[#484f58] uppercase tracking-wider pr-4`}>{l}</div>
-            ))}
-          </div>
+              {/* Session incidents */}
+              <div className="p-3">
+                <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Session Incidents</p>
+                {events.filter(e => e.type === "INCIDENT_OPEN").length === 0
+                  ? <p className="text-[11px] text-[#484f58] px-1 italic">No incidents this session.</p>
+                  : events.filter(e => e.type === "INCIDENT_OPEN").map((e, i) => {
+                    const inc = e as WsIncidentOpen;
+                    const sev = SEV[inc.severity] ?? SEV.LOW;
+                    return (
+                      <div key={i} className="flex items-start gap-2 px-1 py-1.5 rounded hover:bg-[#161b22] transition-colors">
+                        <span className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${sev.dot}`} />
+                        <div className="min-w-0">
+                          <p className="text-[11px] text-[#c9d1d9] font-mono truncate">{inc.source_ip}</p>
+                          <p className="text-[10px] text-[#8b949e] truncate">{inc.attack_type.replace(/_/g, " ")} · {inc.country}</p>
+                        </div>
+                        <span className={`ml-auto text-[9px] font-bold px-1 py-0.5 rounded border shrink-0 ${sev.badge}`}>{sev.label}</span>
+                      </div>
+                    );
+                  })
+                }
+              </div>
 
-          {/* Events — init logs shown when no live events exist */}
-          <div ref={feedRef} className="flex-1 overflow-y-auto font-mono text-[11px]">
-            {events.length === 0 ? (
-              <>
-                {INIT_LOGS.map((log, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-0 px-4 py-0.5 hover:bg-[#161b22] transition-colors border-b border-[#21262d]/40"
-                  >
-                    <span className="w-20 text-[#484f58] shrink-0">{log.ts}</span>
-                    <span className={`w-14 shrink-0 ${log.levelColor}`}>{log.level}</span>
-                    <span className="w-28 text-[#484f58] shrink-0 truncate">{log.type}</span>
-                    <span className="w-32 font-mono text-[#8b949e] shrink-0 truncate">{log.source}</span>
-                    <span className="flex-1 text-[#484f58] truncate">{log.detail}</span>
+              {/* Detection nodes */}
+              <div className="p-3 border-t border-[#30363d]">
+                <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Detection Nodes</p>
+                {[["ngfw-01", "online"], ["waf-proxy", "online"], ["edr-agent", "online"], ["siem-core", "online"]].map(([node, status]) => (
+                  <div key={node} className="flex items-center gap-2 px-1 py-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950] shrink-0" />
+                    <span className="text-[11px] font-mono text-[#8b949e] flex-1">{node}</span>
+                    <span className="text-[10px] text-[#3fb950]">{status}</span>
                   </div>
                 ))}
-                {/* Blinking cursor row to signal the stream is live and waiting */}
-                <div className="flex items-center gap-0 px-4 py-1">
-                  <span className="w-20 text-[#484f58] shrink-0">--:--:--</span>
-                  <span className="w-14 shrink-0" />
-                  <span className="w-28 shrink-0" />
-                  <span className="w-32 shrink-0" />
-                  <span className="flex-1 flex items-center gap-1.5 text-[#484f58]">
-                    <span className="inline-block w-1.5 h-3 bg-[#8b949e] opacity-60 animate-pulse" />
-                  </span>
-                </div>
-              </>
-            ) : (
-              events.map((ev, i) => <EventRow key={i} ev={ev} />)
-            )}
-          </div>
-        </main>
-
-        {/* ── Col 3: Context panel ── */}
-        <aside className="border-l border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
-
-          {/* Incident context */}
-          <div className="border-b border-[#30363d]">
-            <SectionHeader icon={<Activity className="w-3.5 h-3.5" />} label="Incident Context" />
-            {!incident ? (
-              <div className="px-4 py-4">
-                <p className="text-[11px] text-[#484f58] italic">No active incident.</p>
-                <div className="mt-3 space-y-1.5">
-                  {[["Last scan", "2m ago"], ["Policy ver.", "2024.12.1"], ["Rule set", "MITRE v15"]].map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between">
-                      <span className="text-[10px] text-[#8b949e]">{k}</span>
-                      <span className="text-[10px] font-mono text-[#c9d1d9]">{v}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
-            ) : (
-              <div className="px-4 py-3 space-y-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">Risk Score</span>
-                    <span className={`text-sm font-bold font-mono ${incident.risk_score >= 80 ? "text-[#da3633]" : incident.risk_score >= 60 ? "text-[#d29922]" : "text-[#3fb950]"}`}>{incident.risk_score}<span className="text-[10px] text-[#8b949e] font-normal">/100</span></span>
-                  </div>
-                  <div className="h-1 bg-[#30363d] rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-500 ${incident.risk_score >= 80 ? "bg-[#da3633]" : incident.risk_score >= 60 ? "bg-[#d29922]" : "bg-[#238636]"}`} style={{ width: `${incident.risk_score}%` }} />
-                  </div>
-                </div>
+            </div>
+          </aside>
 
-                <div className="space-y-1.5 text-[11px]">
-                  {[
-                    ["Source IP", incident.source_ip, true],
-                    ["Country", incident.country, false],
-                    ["ASN", incident.asn, true],
-                    ["Technique", incident.mitre_technique, true],
-                    ["Tactic", incident.mitre_tactic, false],
-                    ["Severity", incident.severity, false],
-                  ].map(([k, v, mono]) => (
-                    <div key={String(k)} className="flex items-center justify-between gap-2">
-                      <span className="text-[#8b949e] shrink-0">{k}</span>
-                      <span className={`${mono ? "font-mono" : ""} text-[#c9d1d9] truncate text-right`}>{String(v)}</span>
+          {/* ── Col 2: Event feed ── */}
+          <main className="flex flex-col overflow-hidden bg-[#0d1117]">
+            <TelemetryMetrics events={events} isRunning={isRunning} />
+
+            {/* Feed header */}
+            <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0">
+              <Terminal className="w-3.5 h-3.5 text-[#8b949e]" />
+              <span className="text-xs font-medium text-[#8b949e]">Event Stream</span>
+              <span className="text-[10px] font-mono text-[#484f58]">—</span>
+              <span className="text-[10px] font-mono text-[#8b949e]">{events.length > 0 ? events.length : INIT_LOGS.length} events</span>
+              {isRunning && (
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950] animate-pulse" />
+                  <span className="text-[10px] text-[#3fb950] font-medium">LIVE</span>
+                </div>
+              )}
+              <div className="flex-1" />
+              <button className="flex items-center gap-1 text-[10px] text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded border border-[#30363d] hover:border-[#8b949e] transition-colors">
+                <Filter className="w-3 h-3" />Filter
+              </button>
+            </div>
+
+            {/* ── FIX 2: Column headers always visible ── */}
+            <div className="flex items-center gap-0 h-7 border-b border-[#30363d] bg-[#161b22] px-4 shrink-0">
+              {[["TIME", "w-20"], ["LEVEL", "w-14"], ["TYPE", "w-28"], ["SOURCE", "w-32"], ["DETAIL", "flex-1"]].map(([l, w]) => (
+                <div key={l} className={`${w} text-[9px] font-semibold text-[#484f58] uppercase tracking-wider pr-4`}>{l}</div>
+              ))}
+            </div>
+
+            {/* Events — init logs shown when no live events exist */}
+            <div ref={feedRef} className="flex-1 overflow-y-auto font-mono text-[11px]">
+              {events.length === 0 ? (
+                <>
+                  {INIT_LOGS.map((log, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-0 px-4 py-0.5 hover:bg-[#161b22] transition-colors border-b border-[#21262d]/40"
+                    >
+                      <span className="w-20 text-[#484f58] shrink-0">{log.ts}</span>
+                      <span className={`w-14 shrink-0 ${log.levelColor}`}>{log.level}</span>
+                      <span className="w-28 text-[#484f58] shrink-0 truncate">{log.type}</span>
+                      <span className="w-32 font-mono text-[#8b949e] shrink-0 truncate">{log.source}</span>
+                      <span className="flex-1 text-[#484f58] truncate">{log.detail}</span>
                     </div>
                   ))}
-                </div>
-
-                <button onClick={handleExportReport} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#58a6ff]/30 text-[#58a6ff] bg-[#58a6ff]/5 hover:bg-[#58a6ff]/10 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#58a6ff] shrink-0" />
-                  Export Forensic Report
-                </button>
-
-                <div className="flex gap-1.5 flex-wrap">
-                  {incident.is_tor && <Flag label="TOR EXIT NODE" color="red" />}
-                  {incident.is_vpn && <Flag label="VPN" color="yellow" />}
-                  {incident.is_proxy && <Flag label="PROXY" color="yellow" />}
-                  {!incident.is_tor && !incident.is_vpn && !incident.is_proxy && <span className="text-[10px] text-[#484f58]">No threat flags</span>}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ML Triage panel */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <SectionHeader icon={<Layers className="w-3.5 h-3.5" />} label="Automated Incident Triage" action={
-              !aiConfig
-                ? <button onClick={() => setKeyModalOpen(true)} className="text-[10px] text-[#58a6ff] hover:underline">Configure engine →</button>
-                : <span className="text-[10px] text-[#484f58] font-mono">{aiConfig.provider}</span>
-            } />
-            <div className="flex-1 overflow-y-auto px-4 py-3">
-              {!aiConfig && (
-                <div className="space-y-2">
-                  <p className="text-[11px] text-[#8b949e] leading-relaxed">ML Detection Engine not configured. Add an API key to enable automated triage, MITRE classification, and response recommendations.</p>
-                  <button onClick={() => setKeyModalOpen(true)} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#58a6ff]/30 text-[#58a6ff] bg-[#58a6ff]/5 hover:bg-[#58a6ff]/10 transition-colors">
-                    Configure SecOps Automation →
-                  </button>
-                </div>
-              )}
-              {aiConfig && isAnalyzing && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[11px] text-[#8b949e]">
-                    <div className="w-3 h-3 border border-[#58a6ff] border-t-transparent rounded-full animate-spin" />
-                    Running ML classification pipeline…
+                  {/* Blinking cursor row to signal the stream is live and waiting */}
+                  <div className="flex items-center gap-0 px-4 py-1">
+                    <span className="w-20 text-[#484f58] shrink-0">--:--:--</span>
+                    <span className="w-14 shrink-0" />
+                    <span className="w-28 shrink-0" />
+                    <span className="w-32 shrink-0" />
+                    <span className="flex-1 flex items-center gap-1.5 text-[#484f58]">
+                      <span className="inline-block w-1.5 h-3 bg-[#8b949e] opacity-60 animate-pulse" />
+                    </span>
                   </div>
-                  {["Parsing telemetry events", "MITRE ATT&CK lookup", "Threat scoring", "Generating response plan"].map((s, i) => (
-                    <div key={s} className="flex items-center gap-2 px-2 py-1 rounded bg-[#161b22] border border-[#30363d]">
-                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "bg-[#3fb950]" : "bg-[#30363d]"}`} />
-                      <span className="text-[10px] text-[#8b949e] font-mono">{s}</span>
-                    </div>
-                  ))}
-                </div>
+                </>
+              ) : (
+                events.map((ev, i) => <EventRow key={i} ev={ev} />)
               )}
-              {aiConfig && !isAnalyzing && !analysis && (
-                <p className="text-[11px] text-[#484f58] italic">Triage output will appear here after a simulation run.</p>
-              )}
-              {analysis && !isAnalyzing && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2 rounded bg-[#161b22] border border-[#30363d]">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-bold text-[#58a6ff] border border-[#58a6ff]/30 bg-[#58a6ff]/8 px-1.5 py-0.5 rounded">{analysis.mitre_technique}</span>
-                      <span className="text-[10px] text-[#8b949e]">{analysis.mitre_tactic}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[9px] text-[#8b949e] block">Confidence</span>
-                      <span className="text-[11px] font-mono font-bold text-[#3fb950]">{analysis.risk_score}%</span>
-                    </div>
-                  </div>
+            </div>
+          </main>
 
-                  <div>
-                    <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Triage Summary</p>
-                    <p className="text-[11px] text-[#c9d1d9] leading-relaxed bg-[#161b22] border border-[#30363d] rounded px-3 py-2">{analysis.summary}</p>
-                  </div>
+          {/* ── Col 3: Context panel ── */}
+          <aside className="border-l border-[#30363d] bg-[#0d1117] flex flex-col overflow-hidden">
 
-                  <div>
-                    <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Automated Response</p>
-                    <div className="px-3 py-2 rounded border border-[#238636]/30 bg-[#238636]/8">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950]" />
-                        <span className="text-[10px] font-mono font-semibold text-[#3fb950]">{analysis.action_taken.replace(/_/g, "_")}</span>
-                        <span className="ml-auto text-[9px] text-[#3fb950] border border-[#238636]/30 px-1 py-0.5 rounded">EXECUTED</span>
+            {/* Incident context */}
+            <div className="border-b border-[#30363d]">
+              <SectionHeader icon={<Activity className="w-3.5 h-3.5" />} label="Incident Context" />
+              {!incident ? (
+                <div className="px-4 py-4">
+                  <p className="text-[11px] text-[#484f58] italic">No active incident.</p>
+                  <div className="mt-3 space-y-1.5">
+                    {[["Last scan", "2m ago"], ["Policy ver.", "2024.12.1"], ["Rule set", "MITRE v15"]].map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between">
+                        <span className="text-[10px] text-[#8b949e]">{k}</span>
+                        <span className="text-[10px] font-mono text-[#c9d1d9]">{v}</span>
                       </div>
-                      <p className="text-[11px] text-[#8b949e] leading-relaxed">{analysis.action_detail}</p>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">Risk Score</span>
+                      <span className={`text-sm font-bold font-mono ${incident.risk_score >= 80 ? "text-[#da3633]" : incident.risk_score >= 60 ? "text-[#d29922]" : "text-[#3fb950]"}`}>{incident.risk_score}<span className="text-[10px] text-[#8b949e] font-normal">/100</span></span>
                     </div>
+                    <div className="h-1 bg-[#30363d] rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-500 ${incident.risk_score >= 80 ? "bg-[#da3633]" : incident.risk_score >= 60 ? "bg-[#d29922]" : "bg-[#238636]"}`} style={{ width: `${incident.risk_score}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px]">
+                    {[
+                      ["Source IP", incident.source_ip, true],
+                      ["Country", incident.country, false],
+                      ["ASN", incident.asn, true],
+                      ["Technique", incident.mitre_technique, true],
+                      ["Tactic", incident.mitre_tactic, false],
+                      ["Severity", incident.severity, false],
+                    ].map(([k, v, mono]) => (
+                      <div key={String(k)} className="flex items-center justify-between gap-2">
+                        <span className="text-[#8b949e] shrink-0">{k}</span>
+                        <span className={`${mono ? "font-mono" : ""} text-[#c9d1d9] truncate text-right`}>{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={handleExportReport} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#58a6ff]/30 text-[#58a6ff] bg-[#58a6ff]/5 hover:bg-[#58a6ff]/10 transition-colors flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#58a6ff] shrink-0" />
+                    Export Forensic Report
+                  </button>
+
+                  <div className="flex gap-1.5 flex-wrap">
+                    {incident.is_tor && <Flag label="TOR EXIT NODE" color="red" />}
+                    {incident.is_vpn && <Flag label="VPN" color="yellow" />}
+                    {incident.is_proxy && <Flag label="PROXY" color="yellow" />}
+                    {!incident.is_tor && !incident.is_vpn && !incident.is_proxy && <span className="text-[10px] text-[#484f58]">No threat flags</span>}
                   </div>
                 </div>
               )}
             </div>
-          </div>
-        </aside>
+
+            {/* ML Triage panel */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <SectionHeader icon={<Layers className="w-3.5 h-3.5" />} label="Automated Incident Triage" action={
+                !aiConfig
+                  ? <button onClick={() => setKeyModalOpen(true)} className="text-[10px] text-[#58a6ff] hover:underline">Configure engine →</button>
+                  : <span className="text-[10px] text-[#484f58] font-mono">{aiConfig.provider}</span>
+              } />
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                {!aiConfig && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-[#8b949e] leading-relaxed">ML Detection Engine not configured. Add an API key to enable automated triage, MITRE classification, and response recommendations.</p>
+                    <button onClick={() => setKeyModalOpen(true)} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#58a6ff]/30 text-[#58a6ff] bg-[#58a6ff]/5 hover:bg-[#58a6ff]/10 transition-colors">
+                      Configure SecOps Automation →
+                    </button>
+                  </div>
+                )}
+                {aiConfig && isAnalyzing && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-[11px] text-[#8b949e]">
+                      <div className="w-3 h-3 border border-[#58a6ff] border-t-transparent rounded-full animate-spin" />
+                      Running ML classification pipeline…
+                    </div>
+                    {["Parsing telemetry events", "MITRE ATT&CK lookup", "Threat scoring", "Generating response plan"].map((s, i) => (
+                      <div key={s} className="flex items-center gap-2 px-2 py-1 rounded bg-[#161b22] border border-[#30363d]">
+                        <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "bg-[#3fb950]" : "bg-[#30363d]"}`} />
+                        <span className="text-[10px] text-[#8b949e] font-mono">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {aiConfig && !isAnalyzing && !analysis && (
+                  <p className="text-[11px] text-[#484f58] italic">Triage output will appear here after a simulation run.</p>
+                )}
+                {analysis && !isAnalyzing && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-2 rounded bg-[#161b22] border border-[#30363d]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold text-[#58a6ff] border border-[#58a6ff]/30 bg-[#58a6ff]/8 px-1.5 py-0.5 rounded">{analysis.mitre_technique}</span>
+                        <span className="text-[10px] text-[#8b949e]">{analysis.mitre_tactic}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] text-[#8b949e] block">Confidence</span>
+                        <span className="text-[11px] font-mono font-bold text-[#3fb950]">{analysis.risk_score}%</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Triage Summary</p>
+                      <p className="text-[11px] text-[#c9d1d9] leading-relaxed bg-[#161b22] border border-[#30363d] rounded px-3 py-2">{analysis.summary}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] text-[#8b949e] uppercase tracking-wider mb-1.5">Automated Response</p>
+                      <div className="px-3 py-2 rounded border border-[#238636]/30 bg-[#238636]/8">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#3fb950]" />
+                          <span className="text-[10px] font-mono font-semibold text-[#3fb950]">{analysis.action_taken.replace(/_/g, "_")}</span>
+                          <span className="ml-auto text-[9px] text-[#3fb950] border border-[#238636]/30 px-1 py-0.5 rounded">EXECUTED</span>
+                        </div>
+                        <p className="text-[11px] text-[#8b949e] leading-relaxed">{analysis.action_detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
         </div>
       )}
 
