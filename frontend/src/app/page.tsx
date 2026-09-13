@@ -337,7 +337,7 @@ export default function Page() {
             </div>
 
             {/* Detection nodes */}
-            <div className="p-3 border-t border-[#30363d] mt-auto">
+            <div className="p-3 border-t border-[#30363d]">
               <p className="text-[10px] text-[#8b949e] uppercase tracking-wider font-medium mb-2 px-1">Detection Nodes</p>
               {[["ngfw-01", "online"], ["waf-proxy", "online"], ["edr-agent", "online"], ["siem-core", "online"]].map(([node, status]) => (
                 <div key={node} className="flex items-center gap-2 px-1 py-1">
@@ -354,8 +354,6 @@ export default function Page() {
         <main className="flex flex-col overflow-hidden bg-[#0d1117]">
           <TelemetryMetrics events={events} isRunning={isRunning} />
 
-          {/* Feed header */}
-          <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0"></div>
           {/* Feed header */}
           <div className="h-9 flex items-center gap-3 px-4 border-b border-[#30363d] bg-[#161b22] shrink-0">
             <Terminal className="w-3.5 h-3.5 text-[#8b949e]" />
@@ -460,7 +458,8 @@ export default function Page() {
                   ))}
                 </div>
 
-                <button onClick={handleExportReport} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#8b949e] transition-colors">
+                <button onClick={handleExportReport} className="w-full text-left text-[11px] px-3 py-2 rounded border border-[#58a6ff]/30 text-[#58a6ff] bg-[#58a6ff]/5 hover:bg-[#58a6ff]/10 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#58a6ff] shrink-0" />
                   Export Forensic Report
                 </button>
 
@@ -610,7 +609,7 @@ function EventRow({ ev }: { ev: WsEvent }) {
   if (ev.type === "INCIDENT_OPEN") {
     const e = ev as WsIncidentOpen;
     return (
-      <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] hover:bg-[#161b22] transition-colors">
+      <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] border-l-2 border-l-[#da3633] hover:bg-[#161b22] transition-colors">
         <span className="w-20 text-[#8b949e] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#da3633]/30 text-[#da3633] bg-[#da3633]/8">ALERT</span></span>
         <span className="w-28 text-[#8b949e] shrink-0">INCIDENT_OPEN</span>
@@ -635,7 +634,7 @@ function EventRow({ ev }: { ev: WsEvent }) {
   if (ev.type === "DEFENSE_ACTION") {
     const e = ev as WsDefenseAction;
     return (
-      <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] bg-[#238636]/5 hover:bg-[#238636]/10 transition-colors">
+      <div className="flex items-center gap-0 px-4 py-1 border-b border-[#21262d] border-l-2 border-l-[#3fb950] bg-[#238636]/5 hover:bg-[#238636]/10 transition-colors">
         <span className="w-20 text-[#8b949e] shrink-0">{ts}</span>
         <span className="w-14 shrink-0"><span className="text-[9px] font-bold px-1 py-0.5 rounded border border-[#238636]/40 text-[#3fb950] bg-[#238636]/15">ACTION</span></span>
         <span className="w-28 text-[#3fb950] font-mono shrink-0 truncate">{e.action}</span>

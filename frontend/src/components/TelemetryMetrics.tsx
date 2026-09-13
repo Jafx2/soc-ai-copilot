@@ -228,9 +228,9 @@ export default function TelemetryMetrics({ events, isRunning }: Props) {
                         Events Per Second — EPS Stream
                     </p>
                     {epsData.length === 0 ? (
-                        <EmptyChart label="Waiting for events" height={72} />
+                        <EmptyChart label="Waiting for events" height={56} />
                     ) : (
-                        <ResponsiveContainer width="100%" height={72}>
+                        <ResponsiveContainer width="100%" height={56}>
                             <AreaChart data={epsData} margin={{ top: 2, right: 4, left: -28, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="epsGrad" x1="0" y1="0" x2="0" y2="1">
@@ -273,9 +273,9 @@ export default function TelemetryMetrics({ events, isRunning }: Props) {
                         Threat Severity Breakdown
                     </p>
                     {activeAttacks === 0 ? (
-                        <EmptyChart label="No incidents" height={72} />
+                        <EmptyChart label="No incidents" height={56} />
                     ) : (
-                        <ResponsiveContainer width="100%" height={72}>
+                        <ResponsiveContainer width="100%" height={56}>
                             <BarChart
                                 data={sevData}
                                 layout="vertical"
