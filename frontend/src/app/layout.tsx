@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SOC AI Copilot — Threat Simulation Dashboard",
-  description: "Real-time SOC threat simulation dashboard",
+  title: "SOC AI Copilot",
+  description: "Real-time threat simulation and AI-powered incident triage dashboard",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
