@@ -218,7 +218,11 @@ export default function Page() {
 
         {/* Nav tabs */}
         <nav className="flex items-center gap-0 h-full text-xs">
-          <TabItem label="Incident Response" active={activeTab === "Incident Response"} onClick={() => setActiveTab("Incident Response")} />
+          <TabItem
+            label={`Incident Response${events.length > 0 ? ` · ${events.length}` : ""}`}
+            active={activeTab === "Incident Response"}
+            onClick={() => setActiveTab("Incident Response")}
+          />
           <TabItem label="Detection Rules" active={activeTab === "Detection Rules"} onClick={() => setActiveTab("Detection Rules")} />
           <TabItem label="Threat Intel" active={activeTab === "Threat Intel"} onClick={() => setActiveTab("Threat Intel")} />
           <TabItem label="Audit Log" active={activeTab === "Audit Log"} onClick={() => setActiveTab("Audit Log")} />
