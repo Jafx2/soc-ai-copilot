@@ -213,7 +213,7 @@ export default function Page() {
         <div className="flex items-center gap-2 pr-4 border-r border-[#30363d] mr-4">
           <Shield className="w-4 h-4 text-[#58a6ff]" strokeWidth={1.5} />
           <span className="text-sm font-semibold text-[#e6edf3] tracking-tight">SOC Copilot</span>
-          <span className="text-[10px] text-[#8b949e] bg-[#30363d] px-1.5 py-0.5 rounded font-mono">v1.0</span>
+          <span className="text-[10px] text-[#8b949e] bg-[#30363d] px-1.5 py-0.5 rounded font-mono">v2.0</span>
         </div>
 
         {/* Nav tabs */}
